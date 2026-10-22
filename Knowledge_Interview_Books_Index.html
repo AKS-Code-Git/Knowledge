@@ -15,7 +15,7 @@ main{padding:30px 22px 44px}.toolbar{display:flex;gap:14px;align-items:center;ju
 .section-title{margin:0;font-size:1.3rem;color:var(--navy)}.search{width:min(100%,340px);border:1px solid #c7d3df;border-radius:10px;background:white;padding:11px 13px;font:inherit;outline-offset:3px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
 .book{background:white;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 4px 14px #142b4a0d;display:flex;flex-direction:column;min-height:190px;transition:transform .15s,box-shadow .15s}
-.book:hover{transform:translateY(-2px);box-shadow:0 8px 22px #142b4a1a}.book-top{display:flex;align-items:flex-start;gap:13px}
+.book:hover{transform:translateY(-2px);box-shadow:0 8px 22px #142b4a1a}.book[aria-hidden='true']{display:none}.book-top{display:flex;align-items:flex-start;gap:13px}
 .icon{flex:0 0 44px;height:44px;border-radius:11px;display:grid;place-items:center;background:#e8f1fa;color:var(--blue);font-size:1.3rem;font-weight:700}
 .book h3{margin:0;font-size:1.04rem;line-height:1.35;color:var(--navy)}.book p{margin:11px 0 18px;color:var(--muted);font-size:.92rem}
 .book a{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:auto;padding:9px 13px;border-radius:8px;color:white;background:var(--blue);text-decoration:none;font-weight:700;font-size:.9rem}
@@ -42,6 +42,45 @@ footer{padding:0 22px 30px;color:var(--muted);font-size:.85rem}@media(prefers-re
 </main>
 <footer>Personal study index · Links open in a new tab.</footer>
 <script>
-(function(){const input=document.getElementById('search');const cards=Array.from(document.querySelectorAll('.book'));const empty=document.getElementById('empty');input.addEventListener('input',function(){const term=input.value.trim().toLowerCase();let visible=0;cards.forEach(function(card){const matches=(card.innerText+' '+card.dataset.search).toLowerCase().includes(term);card.hidden=!matches;if(matches)visible++;});empty.style.display=visible?'none':'block';});}());
+(function () {
+  function initBookSearch() {
+    var input = document.getElementById('search');
+    var cards = document.querySelectorAll('#books .book');
+    var empty = document.getElementById('empty');
+    if (!input || !cards.length || !empty) return;
+
+    var entries = [];
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      var text = (card.textContent || card.innerText || '') + ' ' + (card.getAttribute('data-search') || '');
+      entries.push({ element: card, text: text.toLowerCase() });
+    }
+
+    function filterBooks() {
+      var term = (input.value || '').toLowerCase().replace(/^\\s+|\\s+$/g, '');
+      var visible = 0;
+      for (var j = 0; j < entries.length; j++) {
+        var matches = term === '' || entries[j].text.indexOf(term) !== -1;
+        entries[j].element.style.display = matches ? '' : 'none';
+        entries[j].element.setAttribute('aria-hidden', matches ? 'false' : 'true');
+        if (matches) visible++;
+      }
+      empty.style.display = visible === 0 ? 'block' : 'none';
+      empty.setAttribute('aria-live', 'polite');
+    }
+
+    input.addEventListener('input', filterBooks);
+    input.addEventListener('change', filterBooks);
+    input.addEventListener('search', filterBooks);
+    input.addEventListener('keyup', filterBooks);
+    filterBooks();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBookSearch);
+  } else {
+    initBookSearch();
+  }
+}());
 </script>
 </body></html>
